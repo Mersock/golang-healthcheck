@@ -38,7 +38,9 @@ func (r *readerCSV) ReaderCSV() (links []string) {
 			log.Fatal("Unable to parse file as CSV for "+r.Filepath, err)
 		}
 		for value := range record {
-			links = append(links, record[value])
+			if record[value] != "" {
+				links = append(links, record[value])
+			}
 		}
 	}
 
