@@ -14,7 +14,18 @@ const (
 
 func main() {
 	router := mux.NewRouter()
-	h := handler.NewHandler(LineClientID, LineRedirectUri, LineSecret)
+	lineAuth := handler.PayloadLineAuth{
+		ClientID:     LineClientID,
+		RedirectUri:  LineRedirectUri,
+		ClientSecret: LineSecret,
+	}
+	sendReport := handler.PayloadSendReport{
+		TotalWebsites: 1000000,
+		SuccessLists:  2,
+		FailureLists:  1,
+		TotalTime:     5000,
+	}
+	h := handler.NewHandler(lineAuth, sendReport)
 
 	router.HandleFunc("/", h.RedirectLogin).Methods(http.MethodGet)
 	router.HandleFunc("/callback", h.CallBack).Methods(http.MethodGet)
