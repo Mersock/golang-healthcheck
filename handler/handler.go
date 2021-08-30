@@ -1,8 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"net/url"
+	"strings"
 )
 
 type handler struct {
@@ -14,6 +18,16 @@ type handler struct {
 type Handler interface {
 	RedirectLogin(writer http.ResponseWriter, request *http.Request)
 	CallBack(writer http.ResponseWriter, request *http.Request)
+	getToken(code string) (result OauthToken)
+}
+
+type OauthToken struct {
+	AccessToken  string `json:"access_token"`
+	TokenType    string `json:"token_type"`
+	RefreshToken string `json:"refresh_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	Scope        string `json:"scope"`
+	IDToken      string `json:"id_token"`
 }
 
 func NewHandler(clientID string, redirectUri string, clineSecret string) Handler {
@@ -34,8 +48,38 @@ func (h *handler) RedirectLogin(writer http.ResponseWriter, request *http.Reques
 }
 
 func (h *handler) CallBack(writer http.ResponseWriter, request *http.Request) {
-	fmt.Println("GET params were:", request.URL.Query())
 	code := request.URL.Query().Get("code")
+	token := h.getToken(code)
+
 	writer.WriteHeader(http.StatusOK)
-	fmt.Fprintln(writer, code)
+	fmt.Fprintln(writer, token.AccessToken)
+}
+
+func (h *handler) getToken(code string) (result OauthToken) {
+	endpoint := "https://api.line.me/oauth2/v2.1/token"
+	data := url.Values{}
+	data.Set("grant_type", "authorization_code")
+	data.Set("redirect_uri", h.RedirectUri)
+	data.Set("client_id", h.ClientID)
+	data.Set("client_secret", h.ClineSecret)
+	data.Set("code", code)
+
+	client := &http.Client{}
+	r, err := http.NewRequest("POST", endpoint, strings.NewReader(data.Encode())) // URL-encoded payload
+	if err != nil {
+		log.Fatal(err)
+	}
+	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+
+	res, err := client.Do(r)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer res.Body.Close()
+
+	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
+		log.Fatal(err)
+	}
+
+	return result
 }
