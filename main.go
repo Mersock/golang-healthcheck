@@ -3,7 +3,10 @@ package main
 import (
 	"github.com/gorilla/mux"
 	"golang-healthcheck/handler"
+	"golang-healthcheck/healthcheck"
+	"golang-healthcheck/readcsv"
 	"net/http"
+	"sync"
 )
 
 const (
@@ -13,7 +16,14 @@ const (
 )
 
 func main() {
+	var wg sync.WaitGroup
 	router := mux.NewRouter()
+
+	reader := readcsv.NewReadCSV("test.csv")
+	links := reader.ReaderCSV()
+	hc := healthcheck.NewHealthCheck(links, &wg)
+	hc.RunHealthCheck()
+
 	lineAuth := handler.PayloadLineAuth{
 		ClientID:     LineClientID,
 		RedirectUri:  LineRedirectUri,
@@ -26,7 +36,6 @@ func main() {
 		TotalTime:     5000,
 	}
 	h := handler.NewHandler(lineAuth, sendReport)
-
 	router.HandleFunc("/", h.RedirectLogin).Methods(http.MethodGet)
 	router.HandleFunc("/callback", h.CallBack).Methods(http.MethodGet)
 
