@@ -32,7 +32,7 @@ type Handler interface {
 	RedirectLogin(writer http.ResponseWriter, request *http.Request)
 	CallBack(writer http.ResponseWriter, request *http.Request)
 	getToken(code string) (result OauthToken)
-	sendReport(accessToken string) (statusCode string)
+	sendReport(accessToken string) (statusCode int)
 }
 
 type OauthToken struct {
@@ -64,9 +64,20 @@ func (h *handler) CallBack(writer http.ResponseWriter, request *http.Request) {
 	code := request.URL.Query().Get("code")
 	token := h.getToken(code)
 	statusCode := h.sendReport(token.AccessToken)
+	var text string
+	if statusCode == 200 {
+		text = "The report healthcheck has been submitted successfully."
+		fmt.Println("Checked webistes: ", h.PayloadSendReport.TotalWebsites)
+		fmt.Println("Successful websites: ", h.PayloadSendReport.SuccessLists)
+		fmt.Println("Failure websites:: ", h.PayloadSendReport.FailureLists)
+		fmt.Println("Total times to finished checking website:", h.PayloadSendReport.TotalTime, "sec")
+	} else {
+		text = "Failed to submit healthcheck report."
+		fmt.Println(text)
+	}
 
-	writer.WriteHeader(http.StatusOK)
-	fmt.Fprintln(writer, statusCode)
+	writer.WriteHeader(statusCode)
+	fmt.Fprintln(writer, text)
 }
 
 func (h *handler) getToken(code string) (result OauthToken) {
@@ -98,7 +109,7 @@ func (h *handler) getToken(code string) (result OauthToken) {
 	return result
 }
 
-func (h *handler) sendReport(accessToken string) (statusCode string) {
+func (h *handler) sendReport(accessToken string) (statusCode int) {
 	endpoint := "https://backend-challenge.line-apps.com/healthcheck/report"
 	values := map[string]int{
 		"total_websites": h.PayloadSendReport.TotalWebsites,
@@ -122,5 +133,5 @@ func (h *handler) sendReport(accessToken string) (statusCode string) {
 	}
 	defer res.Body.Close()
 
-	return res.Status
+	return res.StatusCode
 }

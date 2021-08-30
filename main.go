@@ -17,24 +17,23 @@ const (
 
 func main() {
 	var wg sync.WaitGroup
+	var client = &http.Client{
+		Timeout: 10,
+	}
 	router := mux.NewRouter()
 
 	reader := readcsv.NewReadCSV("test.csv")
 	links := reader.ReaderCSV()
-	hc := healthcheck.NewHealthCheck(links, &wg)
-	hc.RunHealthCheck()
+
+	hc := healthcheck.NewHealthCheck(links, &wg, client)
+	sendReport := hc.RunHealthCheck()
 
 	lineAuth := handler.PayloadLineAuth{
 		ClientID:     LineClientID,
 		RedirectUri:  LineRedirectUri,
 		ClientSecret: LineSecret,
 	}
-	sendReport := handler.PayloadSendReport{
-		TotalWebsites: 1000000,
-		SuccessLists:  2,
-		FailureLists:  1,
-		TotalTime:     5000,
-	}
+
 	h := handler.NewHandler(lineAuth, sendReport)
 	router.HandleFunc("/", h.RedirectLogin).Methods(http.MethodGet)
 	router.HandleFunc("/callback", h.CallBack).Methods(http.MethodGet)
