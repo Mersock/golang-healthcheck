@@ -8,6 +8,7 @@ import (
 type handler struct {
 	ClientID    string
 	RedirectUri string
+	ClineSecret string
 }
 
 type Handler interface {
@@ -15,10 +16,11 @@ type Handler interface {
 	CallBack(writer http.ResponseWriter, request *http.Request)
 }
 
-func NewHandler(clientID string, redirectUri string) Handler {
+func NewHandler(clientID string, redirectUri string, clineSecret string) Handler {
 	return &handler{
 		ClientID:    clientID,
 		RedirectUri: redirectUri,
+		ClineSecret: clineSecret,
 	}
 }
 
