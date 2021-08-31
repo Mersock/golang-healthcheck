@@ -23,10 +23,10 @@ type PayloadLineAuth struct {
 }
 
 type PayloadSendReport struct {
-	TotalWebsites int
-	SuccessLists  int
-	FailureLists  int
-	TotalTime     int
+	TotalWebsites int `json:"total_websites"`
+	SuccessLists  int `json:"success"`
+	FailureLists  int `json:"failure"`
+	TotalTime     int `json:"total_time"`
 }
 
 type Handler interface {
@@ -112,13 +112,7 @@ func (h *handler) getToken(code string) (result OauthToken) {
 
 func (h *handler) sendReport(accessToken string) (statusCode int) {
 	endpoint := "https://backend-challenge.line-apps.com/healthcheck/report"
-	values := map[string]int{
-		"total_websites": h.PayloadSendReport.TotalWebsites,
-		"success":        h.PayloadSendReport.SuccessLists,
-		"failure":        h.PayloadSendReport.FailureLists,
-		"total_time":     h.PayloadSendReport.TotalTime,
-	}
-	jsonData, err := json.Marshal(values)
+	jsonData, err := json.Marshal(h.PayloadSendReport)
 
 	r, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
