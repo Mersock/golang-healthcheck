@@ -3,7 +3,6 @@ package readcsv
 import (
 	"encoding/csv"
 	"io"
-	"log"
 	"os"
 )
 
@@ -12,7 +11,7 @@ type readerCSV struct {
 }
 
 type ReadCSV interface {
-	ReaderCSV() (links []string)
+	ReaderCSV() (links []string, err error)
 }
 
 func NewReadCSV(filepath string) ReadCSV {
@@ -21,10 +20,10 @@ func NewReadCSV(filepath string) ReadCSV {
 	}
 }
 
-func (r *readerCSV) ReaderCSV() (links []string) {
+func (r *readerCSV) ReaderCSV() (links []string, err error) {
 	f, err := os.Open(r.Filepath)
 	if err != nil {
-		log.Fatal("Unable to read input file "+r.Filepath, err)
+		return links, err
 	}
 	defer f.Close()
 
@@ -35,7 +34,7 @@ func (r *readerCSV) ReaderCSV() (links []string) {
 			break
 		}
 		if err != nil {
-			log.Fatal("Unable to parse file as CSV for "+r.Filepath, err)
+			return links, err
 		}
 		for value := range record {
 			if record[value] != "" {
@@ -44,5 +43,5 @@ func (r *readerCSV) ReaderCSV() (links []string) {
 		}
 	}
 
-	return links
+	return links, nil
 }

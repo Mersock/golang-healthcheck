@@ -5,7 +5,9 @@ import (
 	"golang-healthcheck/handler"
 	"golang-healthcheck/healthcheck"
 	"golang-healthcheck/readcsv"
+	"log"
 	"net/http"
+	"os"
 	"sync"
 	"time"
 )
@@ -16,6 +18,10 @@ const (
 	LineSecret      = "1ebd163f0ff50083b449d00715603630"
 )
 
+func init() {
+	os.Setenv("TZ", "Asia/Bangkok")
+}
+
 func main() {
 	var wg sync.WaitGroup
 	var client = &http.Client{
@@ -24,7 +30,10 @@ func main() {
 	router := mux.NewRouter()
 
 	reader := readcsv.NewReadCSV("test.csv")
-	links := reader.ReaderCSV()
+	links, err := reader.ReaderCSV()
+	if err != nil {
+		log.Fatalf("ReaderCSV Error: %v", err)
+	}
 
 	hc := healthcheck.NewHealthCheck(links, &wg, client)
 	sendReport := hc.RunHealthCheck()

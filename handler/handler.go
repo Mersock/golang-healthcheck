@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
@@ -32,8 +31,9 @@ type PayloadSendReport struct {
 type Handler interface {
 	RedirectLogin(writer http.ResponseWriter, request *http.Request)
 	CallBack(writer http.ResponseWriter, request *http.Request)
-	getToken(code string) (result OauthToken)
-	sendReport(accessToken string) (statusCode int)
+	getToken(code string) (result OauthToken, err error)
+	sendReport(accessToken string) (statusCode int, err error)
+	resultLogger(statusCode int) (message string)
 }
 
 type OauthToken struct {
@@ -64,25 +64,27 @@ func (h *handler) RedirectLogin(writer http.ResponseWriter, request *http.Reques
 
 func (h *handler) CallBack(writer http.ResponseWriter, request *http.Request) {
 	code := request.URL.Query().Get("code")
-	token := h.getToken(code)
-	statusCode := h.sendReport(token.AccessToken)
-	var text string
-	if statusCode == 200 {
-		text = "The report healthcheck has been submitted successfully."
-		fmt.Println("Checked webistes: ", h.PayloadSendReport.TotalWebsites)
-		fmt.Println("Successful websites: ", h.PayloadSendReport.SuccessLists)
-		fmt.Println("Failure websites:: ", h.PayloadSendReport.FailureLists)
-		fmt.Println("Total times to finished checking website:", h.PayloadSendReport.TotalTime, "sec")
-	} else {
-		text = "Failed to submit healthcheck report."
-		fmt.Println(text)
+	token, err := h.getToken(code)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(writer, "Failed to LINE login ", err)
+		return
 	}
 
+	statusCode, err := h.sendReport(token.AccessToken)
+	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
+		fmt.Fprintln(writer, "Failed to send healthcheck report ", err)
+		return
+	}
+
+	message := h.resultLogger(statusCode)
+
 	writer.WriteHeader(statusCode)
-	fmt.Fprintln(writer, text)
+	fmt.Fprintln(writer, message)
 }
 
-func (h *handler) getToken(code string) (result OauthToken) {
+func (h *handler) getToken(code string) (result OauthToken, err error) {
 	endpoint := "https://api.line.me/oauth2/v2.1/token"
 	data := url.Values{}
 	data.Set("grant_type", "authorization_code")
@@ -93,42 +95,57 @@ func (h *handler) getToken(code string) (result OauthToken) {
 
 	r, err := http.NewRequest("POST", endpoint, strings.NewReader(data.Encode())) // URL-encoded payload
 	if err != nil {
-		log.Fatal(err)
+		return result, err
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
 	res, err := h.Client.Do(r)
 	if err != nil {
-		log.Fatal(err)
+		return result, err
 	}
 	defer res.Body.Close()
 
 	if err := json.NewDecoder(res.Body).Decode(&result); err != nil {
-		log.Fatal(err)
+		return result, err
 	}
 
-	return result
+	return result, nil
 }
 
-func (h *handler) sendReport(accessToken string) (statusCode int) {
+func (h *handler) sendReport(accessToken string) (statusCode int, err error) {
 	endpoint := "https://backend-challenge.line-apps.com/healthcheck/report"
 	jsonData, err := json.Marshal(h.PayloadSendReport)
 	if err != nil {
-		log.Fatal(err)
+		return statusCode, err
 	}
 
 	r, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
-		log.Fatal(err)
+		return statusCode, err
 	}
 	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 
 	res, err := h.Client.Do(r)
 	if err != nil {
-		log.Fatal(err)
+		return statusCode, err
 
 	}
 	defer res.Body.Close()
 
-	return res.StatusCode
+	return res.StatusCode, nil
+}
+
+func (h *handler) resultLogger(statusCode int) (message string) {
+	if statusCode == 200 {
+		message = "The report healthcheck has been submitted successfully."
+		fmt.Println("Checked websites: ", h.PayloadSendReport.TotalWebsites)
+		fmt.Println("Successful websites: ", h.PayloadSendReport.SuccessLists)
+		fmt.Println("Failure websites:: ", h.PayloadSendReport.FailureLists)
+		fmt.Println("Total times to finished checking websites:", h.PayloadSendReport.TotalTime, "sec")
+	} else {
+		message = "Failed to submit healthcheck report."
+		fmt.Println(message)
+	}
+
+	return message
 }
