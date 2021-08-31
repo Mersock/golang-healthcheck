@@ -12,7 +12,7 @@ import (
 type handler struct {
 	PayloadLineAuth   PayloadLineAuth
 	PayloadSendReport PayloadSendReport
-	Client            *http.Client
+	Client            HttpClient
 }
 
 type PayloadLineAuth struct {
@@ -28,14 +28,6 @@ type PayloadSendReport struct {
 	TotalTime     int `json:"total_time"`
 }
 
-type Handler interface {
-	RedirectLogin(writer http.ResponseWriter, request *http.Request)
-	CallBack(writer http.ResponseWriter, request *http.Request)
-	getToken(code string) (result OauthToken, err error)
-	sendReport(accessToken string) (statusCode int, err error)
-	resultLogger(statusCode int) (message string)
-}
-
 type OauthToken struct {
 	AccessToken  string `json:"access_token"`
 	TokenType    string `json:"token_type"`
@@ -45,7 +37,19 @@ type OauthToken struct {
 	IDToken      string `json:"id_token"`
 }
 
-func NewHandler(auth PayloadLineAuth, report PayloadSendReport, client *http.Client) Handler {
+type Handler interface {
+	RedirectLogin(writer http.ResponseWriter, request *http.Request)
+	CallBack(writer http.ResponseWriter, request *http.Request)
+	getToken(code string) (result OauthToken, err error)
+	sendReport(accessToken string) (statusCode int, err error)
+	resultLogger(statusCode int) (message string)
+}
+
+type HttpClient interface {
+	Do(req *http.Request) (*http.Response, error)
+}
+
+func NewHandler(auth PayloadLineAuth, report PayloadSendReport, client HttpClient) Handler {
 	return &handler{
 		PayloadLineAuth:   auth,
 		PayloadSendReport: report,
@@ -93,7 +97,7 @@ func (h *handler) getToken(code string) (result OauthToken, err error) {
 	data.Set("client_secret", h.PayloadLineAuth.ClientSecret)
 	data.Set("code", code)
 
-	r, err := http.NewRequest("POST", endpoint, strings.NewReader(data.Encode())) // URL-encoded payload
+	r, err := http.NewRequest(http.MethodPost, endpoint, strings.NewReader(data.Encode())) // URL-encoded payload
 	if err != nil {
 		return result, err
 	}
