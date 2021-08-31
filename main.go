@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"golang-healthcheck/handler"
 	"golang-healthcheck/healthcheck"
@@ -16,6 +17,7 @@ const (
 	LineClientID    = "1656368826"
 	LineRedirectUri = "http://localhost:8080/callback"
 	LineSecret      = "1ebd163f0ff50083b449d00715603630"
+	Port            = 8080
 )
 
 func init() {
@@ -24,11 +26,17 @@ func init() {
 
 func main() {
 	var wg sync.WaitGroup
-	var client = &http.Client{
-		Timeout: 10 * time.Second,
-	}
 	var mutex sync.Mutex
 	router := mux.NewRouter()
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+	server := &http.Server{
+		Handler:      router,
+		Addr:         fmt.Sprintf(":%v", Port),
+		WriteTimeout: 10 * time.Second,
+		ReadTimeout:  10 * time.Second,
+	}
 
 	reader := readcsv.NewReadCSV("test.csv")
 	links, err := reader.ReaderCSV()
@@ -49,5 +57,5 @@ func main() {
 	router.HandleFunc("/", h.RedirectLogin).Methods(http.MethodGet)
 	router.HandleFunc("/callback", h.CallBack).Methods(http.MethodGet)
 
-	http.ListenAndServe(":8080", router)
+	log.Fatal(server.ListenAndServe())
 }
