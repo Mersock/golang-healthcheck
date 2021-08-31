@@ -42,7 +42,8 @@ func (hc *healthCheck) RunHealthCheck() handler.PayloadSendReport {
 	}
 	hc.WaitGroup.Wait()
 	totalTime := int(time.Since(start).Seconds())
-	fmt.Println("Done!")
+	fmt.Printf("Done!\n\n")
+	fmt.Printf("Please open web browser and go to http://localhost:8080/ to login to submit healthcheck report.\n\n")
 
 	return handler.PayloadSendReport{
 		TotalWebsites: len(hc.Links),
