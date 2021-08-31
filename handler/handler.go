@@ -113,6 +113,9 @@ func (h *handler) getToken(code string) (result OauthToken) {
 func (h *handler) sendReport(accessToken string) (statusCode int) {
 	endpoint := "https://backend-challenge.line-apps.com/healthcheck/report"
 	jsonData, err := json.Marshal(h.PayloadSendReport)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	r, err := http.NewRequest(http.MethodPost, endpoint, bytes.NewBuffer(jsonData))
 	if err != nil {
