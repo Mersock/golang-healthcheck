@@ -27,6 +27,7 @@ func main() {
 	var client = &http.Client{
 		Timeout: 10 * time.Second,
 	}
+	var mutex sync.Mutex
 	router := mux.NewRouter()
 
 	reader := readcsv.NewReadCSV("test.csv")
@@ -35,7 +36,7 @@ func main() {
 		log.Fatalf("ReaderCSV Error: %v", err)
 	}
 
-	hc := healthcheck.NewHealthCheck(links, &wg, client)
+	hc := healthcheck.NewHealthCheck(links, &wg, client, &mutex)
 	sendReport := hc.RunHealthCheck()
 
 	lineAuth := handler.PayloadLineAuth{

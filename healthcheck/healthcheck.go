@@ -12,6 +12,7 @@ type healthCheck struct {
 	Links     []string
 	WaitGroup *sync.WaitGroup
 	Client    *http.Client
+	Mutex     *sync.Mutex
 }
 
 type CountStatus struct {
@@ -24,11 +25,12 @@ type HealthCheck interface {
 	checkLink(link string, success, failure *int)
 }
 
-func NewHealthCheck(links []string, waitGroup *sync.WaitGroup, client *http.Client) HealthCheck {
+func NewHealthCheck(links []string, waitGroup *sync.WaitGroup, client *http.Client, mutex *sync.Mutex) HealthCheck {
 	return &healthCheck{
 		Links:     links,
 		WaitGroup: waitGroup,
 		Client:    client,
+		Mutex:     mutex,
 	}
 }
 
@@ -54,6 +56,8 @@ func (hc *healthCheck) RunHealthCheck() handler.PayloadSendReport {
 }
 
 func (hc *healthCheck) checkLink(link string, success, failure *int) {
+	hc.Mutex.Lock()
+	defer hc.Mutex.Unlock()
 	defer hc.WaitGroup.Done()
 	_, err := hc.Client.Get(link)
 	if err != nil {
