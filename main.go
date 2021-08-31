@@ -35,7 +35,7 @@ func main() {
 		ClientSecret: LineSecret,
 	}
 
-	h := handler.NewHandler(lineAuth, sendReport)
+	h := handler.NewHandler(lineAuth, sendReport, client)
 	router.HandleFunc("/", h.RedirectLogin).Methods(http.MethodGet)
 	router.HandleFunc("/callback", h.CallBack).Methods(http.MethodGet)
 
