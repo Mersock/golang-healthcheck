@@ -18,6 +18,7 @@ const (
 	LineRedirectUri = "http://localhost:8080/callback"
 	LineSecret      = "1ebd163f0ff50083b449d00715603630"
 	Port            = 8080
+	Timeout         = 10
 )
 
 func init() {
@@ -29,13 +30,13 @@ func main() {
 	var mutex sync.Mutex
 	router := mux.NewRouter()
 	client := &http.Client{
-		Timeout: 10 * time.Second,
+		Timeout: Timeout * time.Second,
 	}
 	server := &http.Server{
 		Handler:      router,
 		Addr:         fmt.Sprintf(":%v", Port),
-		WriteTimeout: 10 * time.Second,
-		ReadTimeout:  10 * time.Second,
+		WriteTimeout: Timeout * time.Second,
+		ReadTimeout:  Timeout * time.Second,
 	}
 
 	reader := readcsv.NewReadCSV("test.csv")
