@@ -13,6 +13,7 @@ import (
 type handler struct {
 	PayloadLineAuth   PayloadLineAuth
 	PayloadSendReport PayloadSendReport
+	Client            *http.Client
 }
 
 type PayloadLineAuth struct {
@@ -44,10 +45,11 @@ type OauthToken struct {
 	IDToken      string `json:"id_token"`
 }
 
-func NewHandler(auth PayloadLineAuth, report PayloadSendReport) Handler {
+func NewHandler(auth PayloadLineAuth, report PayloadSendReport, client *http.Client) Handler {
 	return &handler{
 		PayloadLineAuth:   auth,
 		PayloadSendReport: report,
+		Client:            client,
 	}
 }
 
@@ -89,14 +91,13 @@ func (h *handler) getToken(code string) (result OauthToken) {
 	data.Set("client_secret", h.PayloadLineAuth.ClientSecret)
 	data.Set("code", code)
 
-	client := &http.Client{}
 	r, err := http.NewRequest("POST", endpoint, strings.NewReader(data.Encode())) // URL-encoded payload
 	if err != nil {
 		log.Fatal(err)
 	}
 	r.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 
-	res, err := client.Do(r)
+	res, err := h.Client.Do(r)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -125,8 +126,7 @@ func (h *handler) sendReport(accessToken string) (statusCode int) {
 	}
 	r.Header.Add("Authorization", fmt.Sprintf("Bearer %s", accessToken))
 
-	client := &http.Client{}
-	res, err := client.Do(r)
+	res, err := h.Client.Do(r)
 	if err != nil {
 		log.Fatal(err)
 
