@@ -54,10 +54,7 @@ func (hc *healthCheck) RunHealthCheck() handler.PayloadSendReport {
 
 func (hc *healthCheck) checkLink(link string, success, failure *int) {
 	defer hc.WaitGroup.Done()
-	client := http.Client{
-		Timeout: 5 * time.Second,
-	}
-	_, err := client.Get(link)
+	_, err := hc.Client.Get(link)
 	if err != nil {
 		*failure++
 		return

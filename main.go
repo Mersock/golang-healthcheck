@@ -7,6 +7,7 @@ import (
 	"golang-healthcheck/readcsv"
 	"net/http"
 	"sync"
+	"time"
 )
 
 const (
@@ -18,7 +19,7 @@ const (
 func main() {
 	var wg sync.WaitGroup
 	var client = &http.Client{
-		Timeout: 10,
+		Timeout: 10 * time.Second,
 	}
 	router := mux.NewRouter()
 
