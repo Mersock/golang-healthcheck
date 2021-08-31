@@ -6,3 +6,6 @@ devdown:
 
 logs:
 	docker logs -f golang-healthcheck
+
+tests:
+	go test ./... -coverprofile=coverage.out && go tool cover -html=coverage.out
