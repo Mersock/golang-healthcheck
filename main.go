@@ -14,10 +14,11 @@ import (
 )
 
 const (
+	Port            = "8080"
+	AppURl          = "http://localhost:" + Port
 	LineClientID    = "1656368826"
-	LineRedirectUri = "http://localhost:8080/callback"
+	LineRedirectUri = AppURl + "/callback"
 	LineSecret      = "1ebd163f0ff50083b449d00715603630"
-	Port            = 8080
 	Timeout         = 10
 )
 
@@ -45,7 +46,8 @@ func main() {
 		log.Fatalf("ReaderCSV Error: %v", err)
 	}
 
-	hc := healthcheck.NewHealthCheck(links, &wg, client, &mutex)
+	baseUrl := fmt.Sprintf("%v", AppURl)
+	hc := healthcheck.NewHealthCheck(links, &wg, client, &mutex, baseUrl)
 	sendReport := hc.RunHealthCheck()
 
 	lineAuth := handler.PayloadLineAuth{
@@ -53,7 +55,6 @@ func main() {
 		RedirectUri:  LineRedirectUri,
 		ClientSecret: LineSecret,
 	}
-
 	h := handler.NewHandler(lineAuth, sendReport, client)
 	router.HandleFunc("/", h.RedirectLogin).Methods(http.MethodGet)
 	router.HandleFunc("/callback", h.CallBack).Methods(http.MethodGet)
