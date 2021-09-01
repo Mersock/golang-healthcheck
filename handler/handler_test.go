@@ -25,7 +25,7 @@ var payloadReport = PayloadSendReport{
 	TotalWebsites: 8,
 	SuccessLists:  6,
 	FailureLists:  2,
-	TotalTime:     10,
+	TotalTime:     5000000000,
 }
 
 type ClientMockOK struct{}

@@ -3,10 +3,10 @@ package handler
 import "net/http"
 
 type PayloadSendReport struct {
-	TotalWebsites int `json:"total_websites"`
-	SuccessLists  int `json:"success"`
-	FailureLists  int `json:"failure"`
-	TotalTime     int `json:"total_time"`
+	TotalWebsites int   `json:"total_websites"`
+	SuccessLists  int   `json:"success"`
+	FailureLists  int   `json:"failure"`
+	TotalTime     int64 `json:"total_time"`
 }
 
 type OauthToken struct {
