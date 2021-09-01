@@ -1,7 +1,7 @@
 # golang-healthcheck
 
 ## Package
-* [gorilla/mux](https://github.com/gorilla/mux)
+* [gorilla/mux](https://github.com/gorilla/mux) implements a request router and dispatcher for matching incoming requests to their respective handler.
 * Golang standard libraries and including `net/http` package.
 
 ## Install
