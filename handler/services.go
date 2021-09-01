@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 )
 
 type services struct {
@@ -78,11 +79,12 @@ func (h *services) SendReport(accessToken string, payload PayloadSendReport) (st
 
 func (h *services) ResultLogger(statusCode int, payload PayloadSendReport) (message string) {
 	if statusCode == 200 {
+		totalTime := payload.TotalTime / int64(time.Millisecond)
 		message = "The report healthcheck has been submitted successfully."
 		fmt.Println("Checked websites: ", payload.TotalWebsites)
 		fmt.Println("Successful websites: ", payload.SuccessLists)
 		fmt.Println("Failure websites:: ", payload.FailureLists)
-		fmt.Println("Total times to finished checking websites:", payload.TotalTime, "sec")
+		fmt.Println("Total times to finished checking websites:", totalTime, "ms")
 	} else {
 		message = "Failed to submit healthcheck report."
 		fmt.Println(message)
