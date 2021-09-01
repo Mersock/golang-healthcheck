@@ -59,7 +59,6 @@ func TestRedirectLogin(t *testing.T) {
 
 	h := NewHandler(lineAuth, payloadReport, client)
 	h.RedirectLogin(w, req)
-	t.Logf("reditect %+v", res)
 	if res.StatusCode != http.StatusOK {
 		t.Errorf("Expected %v, Actual %v", http.StatusOK, res.StatusCode)
 	}

@@ -24,7 +24,6 @@ func TestRunHealthCheck(t *testing.T) {
 	links := []string{"https://line.me/th/", "https://reqres.in/api/users?delay=15", "https://winning.co.th"}
 	hc := NewHealthCheck(links, &wg, client, &mutex, baseUrl)
 	sendReport := hc.RunHealthCheck()
-	//t.Logf("xx %+v", sendReport)
 	if sendReport.TotalWebsites != len(links) {
 		t.Errorf("Expected %v, Actual %v", len(links), sendReport.TotalWebsites)
 	}
