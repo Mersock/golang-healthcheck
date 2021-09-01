@@ -27,6 +27,7 @@ func init() {
 }
 
 func main() {
+	filename := os.Args[1]
 	var wg sync.WaitGroup
 	var mutex sync.Mutex
 	router := mux.NewRouter()
@@ -40,7 +41,7 @@ func main() {
 		ReadTimeout:  Timeout * time.Second,
 	}
 
-	reader := readcsv.NewReadCSV("test.csv")
+	reader := readcsv.NewReadCSV(filename)
 	links, err := reader.ReaderCSV()
 	if err != nil {
 		log.Fatalf("ReaderCSV Error: %v", err)
