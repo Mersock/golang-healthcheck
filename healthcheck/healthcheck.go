@@ -13,6 +13,7 @@ type healthCheck struct {
 	WaitGroup *sync.WaitGroup
 	Client    *http.Client
 	Mutex     *sync.Mutex
+	BaseUrl   string
 }
 
 type CountStatus struct {
@@ -25,12 +26,13 @@ type HealthCheck interface {
 	checkLink(link string, success, failure *int)
 }
 
-func NewHealthCheck(links []string, waitGroup *sync.WaitGroup, client *http.Client, mutex *sync.Mutex) HealthCheck {
+func NewHealthCheck(links []string, waitGroup *sync.WaitGroup, client *http.Client, mutex *sync.Mutex, baseUrl string) HealthCheck {
 	return &healthCheck{
 		Links:     links,
 		WaitGroup: waitGroup,
 		Client:    client,
 		Mutex:     mutex,
+		BaseUrl:   baseUrl,
 	}
 }
 
